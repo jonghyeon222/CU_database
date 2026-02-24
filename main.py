@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem, \
-    QLabel, QLineEdit, QPushButton, QMessageBox, QSpinBox
+    QLabel, QLineEdit, QPushButton, QMessageBox, QSpinBox, QComboBox
 from db_module import DB, DB_CONFIG
 
 class MainWindow(QMainWindow):
@@ -12,6 +12,9 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(central)
         vbox = QVBoxLayout(central)
 
+        self.input_feature = QComboBox(self)
+        self.input_feature.addItems(["추가", "제거", "수정"])
+
         form_box = QHBoxLayout()
         self.input_type = QLineEdit()
         self.input_product = QLineEdit()
@@ -19,9 +22,10 @@ class MainWindow(QMainWindow):
         self.input_tag = QLineEdit()
         self.input_stock = QSpinBox()
         self.input_stock.setRange(0, 999)
-        self.btn_add = QPushButton("추가")
-        self.btn_add.clicked.connect(self.add_product)
+        self.btn_add = QPushButton("적용")
+        self.btn_add.clicked.connect(self.apply)
 
+        form_box.addWidget(self.input_feature)
         form_box.addWidget(QLabel("종류"))
         form_box.addWidget(self.input_type)
         form_box.addWidget(QLabel("상품명"))
@@ -77,6 +81,15 @@ class MainWindow(QMainWindow):
             self.load_products()
         else:
             QMessageBox.critical(self, "실패", "추가 중 오류가 발생했습니다.")
+
+    def apply(self):
+        func = self.input_feature.currentText()
+        if func == "추가":
+            self.add_product()
+        elif func == "제거":
+            pass
+        elif func == "수정":
+            pass
 
 
 
