@@ -23,6 +23,15 @@ class DB:
                 count, = cur.fetchone()
                 return count == 1
 
+    def verify_products(self, product):
+        sql = "select count(*) from members where product = %s"
+        with self.connect() as conn:
+            with conn.cursor() as cur:
+                cur.execute(sql, product)
+                count, = cur.fetchone()
+                return count == 1
+
+
     def fetch_products(self):
         sql = "select id, type, product, price, tag, stock from members order by id"
         with self.connect() as conn:

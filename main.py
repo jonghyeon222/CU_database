@@ -14,6 +14,7 @@ class MainWindow(QMainWindow):
 
         self.input_feature = QComboBox(self)
         self.input_feature.addItems(["추가", "제거", "수정"])
+        self.input_feature.currentIndexChanged.connect(self.update_ui)
 
         form_box = QHBoxLayout()
         self.input_type = QLineEdit()
@@ -70,26 +71,66 @@ class MainWindow(QMainWindow):
         if not type or not product or not price or not tag or not stock:
             QMessageBox.warning(self, "오류", "모든 정보를 입력하세요.")
             return
-        ok = self.db.insert_product(type, product, price, tag, stock)
-        if ok:
-            QMessageBox.information(self, "완료", "추가되었습니다.")
-            self.input_type.clear()
-            self.input_product.clear()
-            self.input_price.clear()
-            self.input_tag.clear()
-            self.input_stock.clear()
-            self.load_products()
+        ok1 = self.db.verify_products(product)
+        if not ok1:
+            ok2 = self.db.insert_product(type, product, price, tag, stock)
+            if ok2:
+                QMessageBox.information(self, "완료", "추가되었습니다.")
+                self.input_type.clear()
+                self.input_product.clear()
+                self.input_price.clear()
+                self.input_tag.clear()
+                self.input_stock.clear()
+                self.load_products()
+            else:
+                QMessageBox.critical(self, "실패", "추가 중 오류가 발생했습니다.")
         else:
-            QMessageBox.critical(self, "실패", "추가 중 오류가 발생했습니다.")
+            QMessageBox.critical(self, "실패", "상품이 이미 존재합니다.")
+
+    def del_product(self):
+        product = self.input_product.text().strip()
+        if not product:
+            QMessageBox.warning(self, "오류", "제거할 상품명을 입력하세요.")
+            return
+        ok1 = self.db.verify_products(product)
+        if ok1:
+            ok2 = self.db.delete_product(product)
+            if ok2:
+                QMessageBox.information(self, "완료", "제거되었습니다.")
+                self.input_product.clear()
+                self.load_products()
+            else:
+                QMessageBox.critical(self, "실패", "제거 중 오류가 발생했습니다.")
+        else:
+            QMessageBox.critical(self, "실패", "상품이 존재하지 않습니다.")
 
     def apply(self):
         func = self.input_feature.currentText()
         if func == "추가":
             self.add_product()
         elif func == "제거":
-            pass
+            self.del_product()
         elif func == "수정":
             pass
 
-
+    def update_ui(self):
+        func = self.input_feature.currentText()
+        if func == "추가":
+            self.input_type.setEnabled(True)
+            self.input_product.setEnabled(True)
+            self.input_price.setEnabled(True)
+            self.input_tag.setEnabled(True)
+            self.input_stock.setEnabled(True)
+        elif func == "제거":
+            self.input_type.setEnabled(False)
+            self.input_product.setEnabled(True)
+            self.input_price.setEnabled(False)
+            self.input_tag.setEnabled(False)
+            self.input_stock.setEnabled(False)
+        elif func == "수정":
+            self.input_type.setEnabled(False)
+            self.input_product.setEnabled(True)
+            self.input_price.setEnabled(True)
+            self.input_tag.setEnabled(False)
+            self.input_stock.setEnabled(True)
 
