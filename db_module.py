@@ -1,3 +1,5 @@
+from itertools import product
+
 import pymysql
 
 DB_CONFIG = dict(
@@ -32,11 +34,17 @@ class DB:
                 return count == 1
 
 
-    def fetch_products(self):
-        sql = "select id, type, product, price, tag, stock from members order by id"
+    def fetch_products(self, category=None):
         with self.connect() as conn:
             with conn.cursor() as cur:
-                cur.execute(sql)
+                if category == "아이스크림":
+                    # %s에 들어갈 데이터를 두 번째 인자로 넘겨야 합니다.
+                    sql = "select id, type, product, price, tag, stock from members where type = %s"
+                    cur.execute(sql, category)
+                else:
+                    sql = "select id, type, product, price, tag, stock from members order by id"
+                    cur.execute(sql)
+
                 return cur.fetchall()
 
     def insert_product(self, type, product, price, tag, stock):
@@ -63,4 +71,15 @@ class DB:
                 conn.rollback()
                 return False
 
+    def update_ui(self, product, price, stock):
+        sql = "update members set price = %s, stock = %s where product = %s"
+        with self.connect() as conn:
+            try:
+                with conn.cursor() as cur:
+                    cur.execute(sql, (price, stock, product))
+                conn.commit()
+                return True
+            except Exception:
+                conn.rollback()
+                return False
 

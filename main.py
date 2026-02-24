@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem, \
-    QLabel, QLineEdit, QPushButton, QMessageBox, QSpinBox, QComboBox
+    QLabel, QLineEdit, QPushButton, QMessageBox, QSpinBox, QComboBox, QCheckBox
 from db_module import DB, DB_CONFIG
 
 class MainWindow(QMainWindow):
@@ -16,7 +16,9 @@ class MainWindow(QMainWindow):
         self.input_feature.addItems(["추가", "제거", "수정"])
         self.input_feature.currentIndexChanged.connect(self.update_ui)
 
-        form_box = QHBoxLayout()
+        form_box1 = QHBoxLayout()
+        form_box2 = QHBoxLayout()
+
         self.input_type = QLineEdit()
         self.input_product = QLineEdit()
         self.input_price = QLineEdit()
@@ -25,19 +27,24 @@ class MainWindow(QMainWindow):
         self.input_stock.setRange(0, 999)
         self.btn_add = QPushButton("적용")
         self.btn_add.clicked.connect(self.apply)
+        self.check1 = QCheckBox("아이스크림")
+        self.check1.stateChanged.connect(self.check_ui)
 
-        form_box.addWidget(self.input_feature)
-        form_box.addWidget(QLabel("종류"))
-        form_box.addWidget(self.input_type)
-        form_box.addWidget(QLabel("상품명"))
-        form_box.addWidget(self.input_product)
-        form_box.addWidget(QLabel("가격"))
-        form_box.addWidget(self.input_price)
-        form_box.addWidget(QLabel("태그"))
-        form_box.addWidget(self.input_tag)
-        form_box.addWidget(QLabel("수량"))
-        form_box.addWidget(self.input_stock)
-        form_box.addWidget(self.btn_add)
+        form_box1.addWidget(self.input_feature)
+        form_box1.addWidget(QLabel("종류"))
+        form_box1.addWidget(self.input_type)
+        form_box1.addWidget(QLabel("상품명"))
+        form_box1.addWidget(self.input_product)
+        form_box1.addWidget(QLabel("가격"))
+        form_box1.addWidget(self.input_price)
+        form_box1.addWidget(QLabel("태그"))
+        form_box1.addWidget(self.input_tag)
+        form_box1.addWidget(QLabel("수량"))
+        form_box1.addWidget(self.input_stock)
+        form_box1.addWidget(self.btn_add)
+
+        form_box2.addWidget(self.check1)
+
 
         self.table = QTableWidget()
         self.table.setColumnCount(6)
@@ -45,13 +52,15 @@ class MainWindow(QMainWindow):
         self.table.setEditTriggers(self.table.NoEditTriggers)
         self.table.verticalHeader().setVisible(False)
 
-        vbox.addLayout(form_box)
+        vbox.addLayout(form_box1)
+        vbox.addLayout(form_box2)
         vbox.addWidget(self.table)
 
         self.load_products()
 
     def load_products(self):
-        rows = self.db.fetch_products()
+        category = self.check1.text() if self.check1.isChecked() else None
+        rows = self.db.fetch_products(category)
         self.table.setRowCount(len(rows))
         for row, (id, type, product, price, tag, stock) in enumerate(rows):
             self.table.setItem(row, 0, QTableWidgetItem(str(id)))
@@ -113,7 +122,7 @@ class MainWindow(QMainWindow):
             return
         ok1 = self.db.verify_products(product)
         if ok1:
-            ok2 = self.db.update(product, price, stock)
+            ok2 = self.db.update_ui(product, price, stock)
             if ok2:
                 QMessageBox.information(self, "완료", "수정되었습니다.")
                 self.input_product.clear()
@@ -155,4 +164,7 @@ class MainWindow(QMainWindow):
             self.input_price.setEnabled(True)
             self.input_tag.setEnabled(False)
             self.input_stock.setEnabled(True)
+
+    def check_ui(self):
+        self.load_products()
 
