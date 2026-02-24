@@ -104,6 +104,28 @@ class MainWindow(QMainWindow):
         else:
             QMessageBox.critical(self, "실패", "상품이 존재하지 않습니다.")
 
+    def update_product(self):
+        product = self.input_product.text().strip()
+        price = self.input_price.text().strip()
+        stock = self.input_stock.text().strip()
+        if not product or not price or not stock:
+            QMessageBox.warning(self, "오류", "빈칸을 모두 작성하세요.")
+            return
+        ok1 = self.db.verify_products(product)
+        if ok1:
+            ok2 = self.db.update(product, price, stock)
+            if ok2:
+                QMessageBox.information(self, "완료", "수정되었습니다.")
+                self.input_product.clear()
+                self.input_price.clear()
+                self.input_stock.clear()
+                self.load_products()
+            else:
+                QMessageBox.critical(self, "실패", "수정중 오류가 발생했습니다.")
+        else:
+            QMessageBox.critical(self, "실패", "상품이 존재하지 않습니다.")
+
+
     def apply(self):
         func = self.input_feature.currentText()
         if func == "추가":
@@ -111,7 +133,7 @@ class MainWindow(QMainWindow):
         elif func == "제거":
             self.del_product()
         elif func == "수정":
-            pass
+            self.update_product()
 
     def update_ui(self):
         func = self.input_feature.currentText()
