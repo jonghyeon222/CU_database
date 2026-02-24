@@ -1,0 +1,82 @@
+from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem, \
+    QLabel, QLineEdit, QPushButton, QMessageBox, QSpinBox
+from db_module import DB, DB_CONFIG
+
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("회원 관리")
+        self.db = DB(**DB_CONFIG)
+
+        central = QWidget()
+        self.setCentralWidget(central)
+        vbox = QVBoxLayout(central)
+
+        form_box = QHBoxLayout()
+        self.input_type = QLineEdit()
+        self.input_product = QLineEdit()
+        self.input_price = QLineEdit()
+        self.input_tag = QLineEdit()
+        self.input_stock = QSpinBox()
+        self.input_stock.setRange(0, 999)
+        self.btn_add = QPushButton("추가")
+        self.btn_add.clicked.connect(self.add_product)
+
+        form_box.addWidget(QLabel("종류"))
+        form_box.addWidget(self.input_type)
+        form_box.addWidget(QLabel("상품명"))
+        form_box.addWidget(self.input_product)
+        form_box.addWidget(QLabel("가격"))
+        form_box.addWidget(self.input_price)
+        form_box.addWidget(QLabel("태그"))
+        form_box.addWidget(self.input_tag)
+        form_box.addWidget(QLabel("수량"))
+        form_box.addWidget(self.input_stock)
+        form_box.addWidget(self.btn_add)
+
+        self.table = QTableWidget()
+        self.table.setColumnCount(6)
+        self.table.setHorizontalHeaderLabels(["ID", "Type", "Product", "Price", "Tag", "Stock"])
+        self.table.setEditTriggers(self.table.NoEditTriggers)
+        self.table.verticalHeader().setVisible(False)
+
+        vbox.addLayout(form_box)
+        vbox.addWidget(self.table)
+
+        self.load_products()
+
+    def load_products(self):
+        rows = self.db.fetch_products()
+        self.table.setRowCount(len(rows))
+        for row, (id, type, product, price, tag, stock) in enumerate(rows):
+            self.table.setItem(row, 0, QTableWidgetItem(str(id)))
+            self.table.setItem(row, 1, QTableWidgetItem(type))
+            self.table.setItem(row, 2, QTableWidgetItem(product))
+            self.table.setItem(row, 3, QTableWidgetItem(str(price)))
+            self.table.setItem(row, 4, QTableWidgetItem(tag))
+            self.table.setItem(row, 5, QTableWidgetItem(str(stock)))
+        self.table.resizeColumnsToContents()
+
+    def add_product(self):
+        type = self.input_type.text().strip()
+        product = self.input_product.text().strip()
+        price = self.input_price.text().strip()
+        tag = self.input_tag.text().strip()
+        stock = self.input_stock.text().strip()
+        if not type or not product or not price or not tag or not stock:
+            QMessageBox.warning(self, "오류", "모든 정보를 입력하세요.")
+            return
+        ok = self.db.insert_product(type, product, price, tag, stock)
+        if ok:
+            QMessageBox.information(self, "완료", "추가되었습니다.")
+            self.input_type.clear()
+            self.input_product.clear()
+            self.input_price.clear()
+            self.input_tag.clear()
+            self.input_stock.clear()
+            self.load_products()
+        else:
+            QMessageBox.critical(self, "실패", "추가 중 오류가 발생했습니다.")
+
+
+
